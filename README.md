@@ -1,3 +1,6 @@
+<img width="1151" height="1079" alt="Screenshot 2026-10-01 at 1 35 40 AM" src="https://github.com/user-attachments/assets/dcfa8448-297e-4532-9420-ca5285f794c1" />
+
+
 # Book Sorter Web Application (Angular + Python FastAPI)
 
 A modern full-stack web application designed to manage and sort a book library by **Author**, **Title**, **Publisher**, and **ISBN number**.
