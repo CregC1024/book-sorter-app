@@ -1,0 +1,177 @@
+<div class="app-container">
+  <!-- Header / Hero Section -->
+  <header class="app-header">
+    <div class="header-brand">
+      <div class="logo-badge">📚</div>
+      <div>
+        <h1>Library Book Sorter</h1>
+        <p class="subtitle">Sort and manage your book collection by Author, Title, Publisher, or ISBN</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-secondary" (click)="onReset()">
+        🔄 Reset Sample Data
+      </button>
+      <button class="btn btn-primary" (click)="showAddModal.set(true)">
+        ➕ Add New Book
+      </button>
+    </div>
+  </header>
+
+  <!-- Error Banner -->
+  <div *ngIf="bookService.error()" class="error-banner">
+    <span>{{ bookService.error() }}</span>
+    <button class="retry-btn" (click)="bookService.fetchBooks()">Retry Connection</button>
+  </div>
+
+  <!-- Control & Filter Bar -->
+  <div class="control-bar">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input
+        type="text"
+        placeholder="Filter by title, author, publisher or ISBN..."
+        [ngModel]="searchInput()"
+        (ngModelChange)="onSearchChange($event)"
+      />
+      <button *ngIf="searchInput()" class="clear-search" (click)="onSearchChange('')">&times;</button>
+    </div>
+
+    <!-- Quick Sort Selector Pills -->
+    <div class="sort-pills">
+      <span class="pill-label">Sort by:</span>
+      <button
+        class="sort-pill"
+        [class.active]="bookService.sortBy() === 'title'"
+        (click)="onSort('title')"
+      >
+        Title
+        <span *ngIf="bookService.sortBy() === 'title'">
+          {{ bookService.sortOrder() === 'asc' ? '▲' : '▼' }}
+        </span>
+      </button>
+
+      <button
+        class="sort-pill"
+        [class.active]="bookService.sortBy() === 'author'"
+        (click)="onSort('author')"
+      >
+        Author
+        <span *ngIf="bookService.sortBy() === 'author'">
+          {{ bookService.sortOrder() === 'asc' ? '▲' : '▼' }}
+        </span>
+      </button>
+
+      <button
+        class="sort-pill"
+        [class.active]="bookService.sortBy() === 'publisher'"
+        (click)="onSort('publisher')"
+      >
+        Publisher
+        <span *ngIf="bookService.sortBy() === 'publisher'">
+          {{ bookService.sortOrder() === 'asc' ? '▲' : '▼' }}
+        </span>
+      </button>
+
+      <button
+        class="sort-pill"
+        [class.active]="bookService.sortBy() === 'isbn'"
+        (click)="onSort('isbn')"
+      >
+        ISBN
+        <span *ngIf="bookService.sortBy() === 'isbn'">
+          {{ bookService.sortOrder() === 'asc' ? '▲' : '▼' }}
+        </span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Bar -->
+  <div class="stats-bar">
+    <span>Showing <strong>{{ bookService.sortedBooks().length }}</strong> books</span>
+    <span class="active-sort-tag">
+      Sorted by <strong>{{ bookService.sortBy() | titlecase }}</strong> ({{ bookService.sortOrder() === 'asc' ? 'Ascending A-Z' : 'Descending Z-A' }})
+    </span>
+  </div>
+
+  <!-- Main Table View -->
+  <div class="table-card">
+    <div *ngIf="bookService.loading()" class="loading-overlay">
+      <div class="spinner"></div>
+      <p>Loading books from FastAPI backend...</p>
+    </div>
+
+    <div class="table-responsive">
+      <table class="book-table">
+        <thead>
+          <tr>
+            <th class="col-id">#</th>
+            <th class="col-sortable" (click)="onSort('title')">
+              Title
+              <span class="sort-icon" [class.active]="bookService.sortBy() === 'title'">
+                {{ bookService.sortBy() === 'title' ? (bookService.sortOrder() === 'asc' ? '▲' : '▼') : '↕' }}
+              </span>
+            </th>
+            <th class="col-sortable" (click)="onSort('author')">
+              Author
+              <span class="sort-icon" [class.active]="bookService.sortBy() === 'author'">
+                {{ bookService.sortBy() === 'author' ? (bookService.sortOrder() === 'asc' ? '▲' : '▼') : '↕' }}
+              </span>
+            </th>
+            <th class="col-sortable" (click)="onSort('publisher')">
+              Publisher
+              <span class="sort-icon" [class.active]="bookService.sortBy() === 'publisher'">
+                {{ bookService.sortBy() === 'publisher' ? (bookService.sortOrder() === 'asc' ? '▲' : '▼') : '↕' }}
+              </span>
+            </th>
+            <th class="col-sortable" (click)="onSort('isbn')">
+              ISBN Number
+              <span class="sort-icon" [class.active]="bookService.sortBy() === 'isbn'">
+                {{ bookService.sortBy() === 'isbn' ? (bookService.sortOrder() === 'asc' ? '▲' : '▼') : '↕' }}
+              </span>
+            </th>
+            <th class="col-actions">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let book of bookService.sortedBooks(); let i = index">
+            <td class="col-id">{{ i + 1 }}</td>
+            <td class="book-title">
+              <span class="icon">📘</span>
+              {{ book.title }}
+            </td>
+            <td class="book-author">✍️ {{ book.author }}</td>
+            <td>
+              <span class="publisher-tag">{{ book.publisher }}</span>
+            </td>
+            <td>
+              <code class="isbn-badge">{{ book.isbn }}</code>
+            </td>
+            <td class="col-actions">
+              <button class="delete-btn" title="Delete book" (click)="onDelete(book.id, $event)">
+                🗑️
+              </button>
+            </td>
+          </tr>
+
+          <tr *ngIf="bookService.sortedBooks().length === 0 && !bookService.loading()">
+            <td colspan="6" class="empty-state">
+              <div class="empty-content">
+                <span class="empty-icon">📭</span>
+                <p>No books found matching your criteria.</p>
+                <button class="btn btn-secondary btn-sm" (click)="onSearchChange('')">Clear Filter</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Add Book Modal -->
+  <app-book-form
+    *ngIf="showAddModal()"
+    (closeModal)="showAddModal.set(false)"
+  ></app-book-form>
+</div>
